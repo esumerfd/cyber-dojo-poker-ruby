@@ -1,131 +1,5 @@
 require 'rspec'
-
-class Poker
-  attr_accessor :deck
-
-  def initialize
-    @deck = Deck.new
-  end
-
-  def deal
-    Hand.new(@deck.cards.sample(5))
-  end
-
-  def rank(black, white)
-    return black.highest(white), Card.new(:H, :A)
-  end
-end
-
-class Deck
-  @@suites = [:C, :D, :H, :S]
-  @@values = [:"2", :"3", :"4", :"5", :"6", :"7", :"8", :"9", :J, :Q, :K, :A]
-
-  class << self
-    def values
-      @@values
-    end
-
-
-    def suites
-      @@suites
-    end
-
-    def create_cards
-      cards = []
-      @@suites.each do |suit|
-        @@values.each do |value|
-          cards << Card.new(suit, value)
-        end
-      end
-      cards
-    end
-  end
-
-  attr_reader :cards
-
-  def initialize(cards = nil)
-    @cards = cards ||= Deck.create_cards
-  end
-
-  def full?
-    return false unless @cards.size == 48
-
-    missing_card = @@suites.find do |suit|
-      @@values.find do |value|
-        false == card?(suit, value)
-      end
-    end
-
-    missing_card.nil?
-  end
-
-  def card?(suit, value)
-    @cards.find do |card|
-      card.suit == suit && card.value == value
-    end != nil
-  end
-
-  def to_s
-    @cards.join(",")
-  end
-end
-
-class Hand
-  attr_accessor :cards
-
-  def initialize(cards)
-    @cards = cards if cards.kind_of?(Array)
-    @cards = parse(cards) if cards.kind_of?(String)
-  end
-
-  def parse(card_codes)
-    cards = []
-    card_codes.scan(/[23456789JQKA][CHSD]/).each do |card_code|
-      value_code = card_code[0]
-      suit_code = card_code[1]
-
-      value = value_code.to_sym
-      suit = suit_code.to_sym
-
-      cards << Card.new(suit, value)
-    end
-    cards
-  end
-
-  def highest(white)
-    # high card
-    # Pair
-    # Two pair
-    # Three of a kind
-    # Straight
-    # Flush
-    # Full house
-    # Four of a kind
-    # Straight flush
-    return white
-  end
-end
-
-class Card
-  attr_accessor :suit
-  attr_accessor :value
-
-  def initialize(suit, value)
-    raise "Invalid card suit: #{suit}" unless Deck.suites.include?(suit)
-    raise "Invalid card value: #{value}" unless Deck.values.include?(value)
-
-    @suit = suit
-    @value = value
-  end
-
-  def ==(other)
-    nil != other && @suit == other.suit && @value == other.value
-  end
-
-  def to_s
-    "#{value}#{suit}"
-  end
-end
+require './poker'
 
 describe "Poker Game" do
   context Poker do
@@ -191,6 +65,77 @@ describe "Poker Game" do
         end
       end
     end
+
+    context "cards" do
+      it "selects straight from code" do
+        expect( Deck.new.select_straight_starting_at("4C") ).to eq(
+          [
+            Card.new(:C, :"4"),
+            Card.new(:C, :"5"),
+            Card.new(:C, :"6"),
+            Card.new(:C, :"7"),
+            Card.new(:C, :"8"),
+          ]
+        )
+      end
+      
+      it "selects straight from card" do
+        expect( Deck.new.select_straight_starting_at(Card.new(:C, :"4")) ).to eq(
+          [
+            Card.new(:C, :"4"),
+            Card.new(:C, :"5"),
+            Card.new(:C, :"6"),
+            Card.new(:C, :"7"),
+            Card.new(:C, :"8"),
+          ]
+        )
+      end
+
+      it "selects straight from 9" do
+        expect( Deck.new.select_straight_starting_at("9H") ).to eq(
+          [
+            Card.new(:H, :"9"),
+            Card.new(:H, :J),
+            Card.new(:H, :Q),
+            Card.new(:H, :K),
+            Card.new(:H, :A),
+          ]
+        )
+      end
+
+      it "selects straight from end of deck" do
+        expect( Deck.new.select_straight_starting_at("AC") ).to eq(
+          [
+            Card.new(:C, :A),
+            Card.joker,
+            Card.joker,
+            Card.joker,
+            Card.joker,
+          ]
+        )
+      end
+    end
+
+    context "next value" do
+
+      it "plus one" do
+        expect( Deck.next_value(:"2") ).to eq(:"3")
+        expect( Deck.next_value(:"9") ).to eq(:J)
+        expect( Deck.next_value(:K) ).to eq(:A)
+      end
+
+      it "nil at end of list" do
+        expect( Deck.next_value(:A) ).to eq(nil)
+      end
+
+      it "returns a joker for a joker" do
+        expect( Deck.next_value(:joker) ).to eq(:joker)
+      end
+
+      it "raises on invalid values" do
+        expect { Deck.next_value(:IVNALID_VALUE) }.to raise_error
+      end
+    end
   end
 
   context Hand do
@@ -210,9 +155,48 @@ describe "Poker Game" do
 
       expect( black.highest(white) ).to eq(white)
     end
+    
+    # 0 nothing
+    # 1 high card
+    # 2 Pair
+    # 3 Two pair
+    # 4 Three of a kind
+    # 5 Straight
+    # 6 Flush
+    # 7 Full house
+    # 8 Four of a kind
+    # 9 Straight flush
+    context "encode rank" do
+      it "is straight flish" do
+        expect(Hand.new("2C3C4C5C6C").send(:straight_flush?)).to eq(true)
+
+        #expect(Hand.new("2C3C4C5C6C").rank_code).to eq("960000000000000000")
+      end
+
+    end
   end
 
   context Card do
+
+    context "construction" do
+
+      it "with a suit and a vlaue" do
+        card = Card.new(:C, :"2")
+        expect(card.suit).to eq(:C)
+        expect(card.value).to eq(:"2")
+      end
+
+      it "with a card_code" do
+        card = Card.from_code("3S")
+        expect(card.suit).to eq(:S)
+        expect(card.value).to eq(:"3")
+      end
+
+      it "with invalid card code" do
+        expect { Card.from_code("XX") }.to raise_error
+      end
+
+    end
 
     it "compares equal" do
       expect( Card.new(:H, :A) ).to eq( Card.new(:H, :A) )
@@ -222,12 +206,6 @@ describe "Poker Game" do
       expect( Card.new(:H, :A) ).not_to eq( Card.new(:C, :A) )
       expect( Card.new(:H, :A) ).not_to eq( Card.new(:H, :J) )
       expect( Card.new(:H, :A) ).not_to eq( nil )
-    end
-
-    it "can is constructed with a suit and a vlaue" do
-      card = Card.new(:C, :"2")
-      expect(card.suit).to eq(:C)
-      expect(card.value).to eq(:"2")
     end
 
     Deck.suites.each do |suit|
@@ -245,6 +223,54 @@ describe "Poker Game" do
     [:"0", :"1", 2, :invalid_value].each do |value|
       it "can not have value #{value}" do
         expect { Card.new(:C, value) }.to raise_error
+      end
+    end
+
+    context "next card" do
+      it "generates the next card" do
+        expect( Card.new(:C, :"2").next_card ).to eq(Card.new(:C, :"3"))
+      end
+
+      it "products jokers if there is no next card" do
+        expect( Card.new(:C, :A).next_card ).to eq(Card.joker)
+      end
+    end
+
+    context "sorts cards by value and" do
+      it "finds first greater than second" do
+        cards = [Card.new(:C, :"3"), Card.new(:C, :"2")]
+
+        cards = cards.sort
+
+        expect(cards[0].value).to eq(:"2")
+        expect(cards[1].value).to eq(:"3")
+      end
+
+      it "finds second greater than first" do
+        cards = [Card.new(:C, :"2"), Card.new(:C, :"3")]
+
+        cards = cards.sort
+
+        expect(cards[0].value).to eq(:"2")
+        expect(cards[1].value).to eq(:"3")
+      end
+      
+      it "finds equal values equal" do
+        cards = [Card.new(:C, :"3"), Card.new(:C, :"3")]
+
+        cards = cards.sort
+
+        expect(cards[0].value).to eq(:"3")
+        expect(cards[1].value).to eq(:"3")
+      end
+
+      it "ignores suit" do
+        cards = [Card.new(:S, :"3"), Card.new(:C, :"3")]
+
+        cards = cards.sort
+
+        expect(cards[0].value).to eq(:"3")
+        expect(cards[1].value).to eq(:"3")
       end
     end
   end
