@@ -135,7 +135,8 @@ class Poker
   end
 
   def rank(black, white)
-    return black.highest(white), Card.new(:H, Value.ace)
+    winner = black.highest(white)
+    return winner, winner.high_card if winner
   end
 end
 
@@ -218,22 +219,52 @@ class Hand
     @cards = from_code(cards) if cards.kind_of?(String)
   end
 
-  def highest(white)
-    # high card
-    # Pair
-    # Two pair
-    # Three of a kind
-    # Straight
-    # Flush
-    # Full house
-    # Four of a kind
-    # Straight flush
-    return white
+  def highest(other)
+
+    delta = self <=> other
+
+    highest = nil
+    highest = self if delta == 1
+    highest = other if delta == -1
+
+    highest
+  end
+
+  def high_card
+    @cards.max { |a,b| a.value <=> b.value }
+  end
+
+  def <=>(other)
+    delta = 0
+
+    delta = 1 if self.send(:rank) > other.send(:rank)
+    delta = -1 if self.send(:rank) < other.send(:rank)
+
+    delta
   end
 
   private
 
+  def rank
+    rank_code = ""
+
+    rank_code << (straight_flush? ? "11" : "00")
+    rank_code << (four_of_a_kind? ? "11" : "00")
+    rank_code << (full_house? ? "11" : "00")
+    rank_code << (flush? ? "11" : "00")
+    rank_code << (straight? ? "11" : "00")
+    rank_code << (three_of_a_kind? ? "11" : "00")
+    rank_code << (two_pair? ? "11" : "00")
+    rank_code << (pair? ? "11" : "00")
+
+    puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{rank_code}"
+
+    rank_code
+  end
+
   def from_code(card_codes)
+    card_codes = card_codes.tr(" ,", "")
+
     cards = []
     card_codes.scan(/[23456789JQKA][CHSD]/).each do |card_code|
       cards << Card.from_code(card_code)
@@ -294,8 +325,7 @@ class Hand
     second_value = uniq_values[1]
     third_value = uniq_values[2]
 
-    (values.count(first_value) == 3 || values.count(second_value) == 3 || values.count(third_value) == 3) &&
-      true #!four_of_a_kind?
+    (values.count(first_value) == 3 || values.count(second_value) == 3 || values.count(third_value) == 3)
   end
 
   def two_pair?

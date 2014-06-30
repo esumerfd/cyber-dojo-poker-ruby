@@ -22,16 +22,54 @@ describe "Poker Game" do
       end
     end
 
-    it "ranks hands" do
-      black = Hand.new("2H3D5S9CKD")
-      white = Hand.new("2C3H4S8CAH")
+    context "cyber-dojo example" do
 
-      poker = Poker.new
+      # Input: Black: 2H 3D 5S 9C KD White: 2C 3H 4S 8C AH
+      # Output: White wins - high card: Ace 
+      it "one" do
+        black = Hand.new("2H 3D 5S 9C KD")
+        white = Hand.new("2C 3H 4S 8C AH")
 
-      winner, high_card = poker.rank(black, white)
+        winner, high_card = Poker.new.rank(black, white)
 
-      expect(winner).to eq(white)
-      expect(high_card).to eq(Card.new(:H, Value.ace))
+        expect( winner ).to eq(white)
+        expect( high_card ).to eq(Card.new(:H, Value.ace))
+      end
+
+      # Input: Black: 2H 4S 4C 2D 4H White: 2S 8S AS QS 3S
+      # Output: Black wins - full house
+      it "two" do
+        black = Hand.new("2H 4S 4C 2D 4H")
+        white = Hand.new("2S 8S AS QS 3S")
+
+        winner, high_card = Poker.new.rank(black, white)
+
+        expect( winner ).to eq(black)
+      end
+
+      # Input: Black: 2H 3D 5S 9C KD White: 2C 3H 4S 8C KH
+      # Output: Black wins - high card: 9
+      it "three" do
+        black = Hand.new("2H 3D 5S 9C KD")
+        white = Hand.new("2C 3H 4S 8C KH")
+
+        winner, high_card = Poker.new.rank(black, white)
+
+        expect( winner ).to eq(black)
+        expect( high_card ).to eq(Card.new(:C, Value.nine))
+      end
+
+      # Input: Black: 2H 3D 5S 9C KD White: 2D 3H 5C 9S KH
+      # Output: Tie
+      it "three" do
+        black = Hand.new("2H 3D 5S 9C KD")
+        white = Hand.new("2D 3H 5C 9S KH")
+
+        winner, high_card = Poker.new.rank(black, white)
+
+        expect( winner ).to eq(black)
+        expect( high_card ).to eq(Card.new(:C, Value.nine))
+      end
     end
   end
 
@@ -153,13 +191,7 @@ describe "Poker Game" do
       expect { Hand.new("") }.to raise_error
     end
 
-    it "finds the highest hand" do
-      black = Hand.new("2H3D5S9CKD")
-      white = Hand.new("2C3H4S8CAH")
-
-      expect( black.highest(white) ).to eq(white)
-    end
-    
+   
     # 0 nothing
     # 1 high card
     # 2 Pair
@@ -256,8 +288,11 @@ describe "Poker Game" do
         it "is with trailing pairs" do
           expect( Hand.new("2C3C3S4C4S").send(:two_pair?) ).to eq(true)
         end
-        it "isn't" do
+        it "isn't only one pair" do
           expect( Hand.new("2C2S3C9S4H").send(:two_pair?) ).not_to eq(true)
+        end
+        it "isn't with 4 of a kind" do
+          expect( Hand.new("2C2S2H2D3C").send(:two_pair?) ).not_to eq(true)
         end
       end
 
@@ -265,8 +300,26 @@ describe "Poker Game" do
         it "is" do
           expect( Hand.new("2C2S3C4C5C").send(:pair?) ).to eq(true)
         end
-        it "isn't" do
-          expect( Hand.new("2C3C4C5C6C").send(:pair?) ).not_to eq(true)
+        it "isn't with no pairs" do
+          expect( Hand.new("2C5S7H9DAH").send(:pair?) ).not_to eq(true)
+        end
+        it "isn't with full house" do
+          expect( Hand.new("2C2S2H3C3S").send(:pair?) ).not_to eq(true)
+        end
+        it "isn't four of a kind" do
+          expect( Hand.new("2C2S2H2D3C").send(:pair?) ).not_to eq(true)
+        end
+      end
+
+      context "high card" do
+        it "low" do
+          expect( Hand.new("2C3C4C5C6C").high_card ).to eq(Card.new(:C, Value.six))
+        end
+        it "high" do
+          expect( Hand.new("AC3C4C5C6C").high_card ).to eq(Card.new(:C, Value.ace))
+        end
+        it "all the same" do
+          expect( Hand.new("9CJSQHKDAC").high_card ).to eq(Card.new(:C, Value.ace))
         end
       end
 
