@@ -24,14 +24,14 @@ describe "Poker Game" do
 
     it "ranks hands" do
       black = Hand.new("2H3D5S9CKD")
-      white = Hand.new("2C3H4SBCAH")
+      white = Hand.new("2C3H4S8CAH")
 
       poker = Poker.new
 
       winner, high_card = poker.rank(black, white)
 
       expect(winner).to eq(white)
-      expect(high_card).to eq(Card.new(:H, :A))
+      expect(high_card).to eq(Card.new(:H, Value.ace))
     end
   end
 
@@ -46,7 +46,7 @@ describe "Poker Game" do
 
     it "does not miss any cards" do
       cards = Deck.create_cards
-      cards[3].value = :"6"
+      cards[3].value = Value.six
 
       deck = Deck.new(cards)
 
@@ -55,11 +55,11 @@ describe "Poker Game" do
 
     it "doesn't have a full deck if a card is missing" do
       expect(Deck.new([])).not_to be_full
-      expect(Deck.new([Card.new(:C, :Q)])).not_to be_full
+      expect(Deck.new([Card.new(:C, Value.queen)])).not_to be_full
     end
 
     Deck.suites.each do |suit|
-      Deck.values.each do |value|
+      Value.values.each do |value|
         it "has card #{suit} #{value}" do
           expect(Deck.new.card?(suit, value)).to eq(true)
         end
@@ -70,23 +70,23 @@ describe "Poker Game" do
       it "selects straight from code" do
         expect( Deck.new.select_straight_starting_at("4C") ).to eq(
           [
-            Card.new(:C, :"4"),
-            Card.new(:C, :"5"),
-            Card.new(:C, :"6"),
-            Card.new(:C, :"7"),
-            Card.new(:C, :"8"),
+            Card.new(:C, Value.four),
+            Card.new(:C, Value.five),
+            Card.new(:C, Value.six),
+            Card.new(:C, Value.seven),
+            Card.new(:C, Value.eight),
           ]
         )
       end
       
       it "selects straight from card" do
-        expect( Deck.new.select_straight_starting_at(Card.new(:C, :"4")) ).to eq(
+        expect( Deck.new.select_straight_starting_at(Card.new(:C, Value.four)) ).to eq(
           [
-            Card.new(:C, :"4"),
-            Card.new(:C, :"5"),
-            Card.new(:C, :"6"),
-            Card.new(:C, :"7"),
-            Card.new(:C, :"8"),
+            Card.new(:C, Value.four),
+            Card.new(:C, Value.five),
+            Card.new(:C, Value.six),
+            Card.new(:C, Value.seven),
+            Card.new(:C, Value.eight),
           ]
         )
       end
@@ -94,11 +94,11 @@ describe "Poker Game" do
       it "selects straight from 9" do
         expect( Deck.new.select_straight_starting_at("9H") ).to eq(
           [
-            Card.new(:H, :"9"),
-            Card.new(:H, :J),
-            Card.new(:H, :Q),
-            Card.new(:H, :K),
-            Card.new(:H, :A),
+            Card.new(:H, Value.nine),
+            Card.new(:H, Value.jack),
+            Card.new(:H, Value.queen),
+            Card.new(:H, Value.king),
+            Card.new(:H, Value.ace),
           ]
         )
       end
@@ -106,7 +106,7 @@ describe "Poker Game" do
       it "selects straight from end of deck" do
         expect( Deck.new.select_straight_starting_at("AC") ).to eq(
           [
-            Card.new(:C, :A),
+            Card.new(:C, Value.ace),
             Card.joker,
             Card.joker,
             Card.joker,
@@ -119,17 +119,17 @@ describe "Poker Game" do
     context "next value" do
 
       it "plus one" do
-        expect( Deck.next_value(:"2") ).to eq(:"3")
-        expect( Deck.next_value(:"9") ).to eq(:J)
-        expect( Deck.next_value(:K) ).to eq(:A)
+        expect( Deck.next_value(Value.two) ).to eq(Value.three)
+        expect( Deck.next_value(Value.nine) ).to eq(Value.jack)
+        expect( Deck.next_value(Value.king) ).to eq(Value.ace)
       end
 
       it "nil at end of list" do
-        expect( Deck.next_value(:A) ).to eq(nil)
+        expect( Deck.next_value(Value.ace) ).to eq(nil)
       end
 
       it "returns a joker for a joker" do
-        expect( Deck.next_value(:joker) ).to eq(:joker)
+        expect( Deck.next_value(Value.joker) ).to eq(Value.joker)
       end
 
       it "raises on invalid values" do
@@ -142,16 +142,20 @@ describe "Poker Game" do
     it "constructs a hand from a string" do
       hand = Hand.new("2C3S4H5D6C")
 
-      expect(hand.cards[0]).to eq(Card.new(:C, :"2"))
-      expect(hand.cards[1]).to eq(Card.new(:S, :"3"))
-      expect(hand.cards[2]).to eq(Card.new(:H, :"4"))
-      expect(hand.cards[3]).to eq(Card.new(:D, :"5"))
-      expect(hand.cards[4]).to eq(Card.new(:C, :"6"))
+      expect(hand.cards[0]).to eq(Card.new(:C, Value.two))
+      expect(hand.cards[1]).to eq(Card.new(:S, Value.three))
+      expect(hand.cards[2]).to eq(Card.new(:H, Value.four))
+      expect(hand.cards[3]).to eq(Card.new(:D, Value.five))
+      expect(hand.cards[4]).to eq(Card.new(:C, Value.six))
+    end
+
+    it "raises if the hand is not complete" do
+      expect { Hand.new("") }.to raise_error
     end
 
     it "finds the highest hand" do
       black = Hand.new("2H3D5S9CKD")
-      white = Hand.new("2C3H4SBCAH")
+      white = Hand.new("2C3H4S8CAH")
 
       expect( black.highest(white) ).to eq(white)
     end
@@ -166,10 +170,107 @@ describe "Poker Game" do
     # 7 Full house
     # 8 Four of a kind
     # 9 Straight flush
-    context "encode rank" do
-      it "is straight flish" do
-        expect(Hand.new("2C3C4C5C6C").send(:straight_flush?)).to eq(true)
+    context "winning hand" do
+      context "straight flush" do
+        it "is" do
+          expect( Hand.new("2C3C4C5C6C").send(:straight_flush?) ).to eq(true)
+        end
+        it "isn't because of number" do
+          expect( Hand.new("2C3C9C5C6C").send(:straight_flush?) ).not_to eq(true)
+        end
+        it "isn't because of suit" do
+          expect( Hand.new("2C3C4S5C6C").send(:straight_flush?) ).not_to eq(true)
+        end
+      end
 
+      context "four of a kind" do
+        it "is" do
+          expect( Hand.new("2C2S2H2D3C").send(:four_of_a_kind?) ).to eq(true)
+        end
+        it "isn't" do
+          expect( Hand.new("2C3S2H2D3C").send(:four_of_a_kind?) ).not_to eq(true)
+        end
+      end
+
+      context "full house" do
+        it "is" do
+          expect( Hand.new("2C2S2H3C3S").send(:full_house?) ).to eq(true)
+        end
+        it "isn't because of number of values" do
+          expect( Hand.new("2C2S2H2C3S").send(:full_house?) ).not_to eq(true)
+        end
+        it "isn't because its a straight" do
+          expect( Hand.new("2C3C4C5C6C").send(:full_house?) ).not_to eq(true)
+        end
+        it "isn't because its a four of a kind" do
+          expect( Hand.new("2C2S2H2S4C").send(:full_house?) ).not_to eq(true)
+        end
+      end
+
+      context "flush" do
+        it "is" do
+          expect( Hand.new("2C4C6C8CAC").send(:flush?) ).to eq(true)
+        end
+        it "isn't because the suites are different" do
+          expect( Hand.new("2S3C4C5C6C").send(:flush?) ).not_to eq(true)
+        end
+        it "isn't because its a straight flush" do
+          expect( Hand.new("2C3C4C5C6C").send(:flush?) ).not_to eq(true)
+        end
+      end
+
+      context "straight" do
+        it "is low" do
+          expect( Hand.new("2C3S4H5D6C").send(:straight?) ).to eq(true)
+        end
+        it "is high" do
+          expect( Hand.new("9HJHQHKHAH").send(:straight?) ).to eq(true)
+        end
+        it "isn't" do
+          expect( Hand.new("2C3C9C5C6C").send(:straight?) ).not_to eq(true)
+        end
+      end
+
+      context "three of a kind" do
+        it "is with leading values" do
+          expect( Hand.new("2C2S2H3C4S").send(:three_of_a_kind?) ).to eq(true)
+        end
+        it "is with traling values" do
+          expect( Hand.new("2C3C4S4H4D").send(:three_of_a_kind?) ).to eq(true)
+        end
+        it "isn't with 4 of a kind" do
+          expect( Hand.new("2C2S2H2D3C").send(:three_of_a_kind?) ).not_to eq(true)
+        end
+        it "isn't with only 2 of a kind" do
+          expect( Hand.new("2C2S9H3C4S").send(:three_of_a_kind?) ).not_to eq(true)
+        end
+      end
+
+      context "two pairs" do
+        it "is with leading pairs" do
+          expect( Hand.new("2C2S3C3S4H").send(:two_pair?) ).to eq(true)
+        end
+        it "is split pairs" do
+          expect( Hand.new("2C2S3C4C4S").send(:two_pair?) ).to eq(true)
+        end
+        it "is with trailing pairs" do
+          expect( Hand.new("2C3C3S4C4S").send(:two_pair?) ).to eq(true)
+        end
+        it "isn't" do
+          expect( Hand.new("2C2S3C9S4H").send(:two_pair?) ).not_to eq(true)
+        end
+      end
+
+      context "pair" do
+        it "is" do
+          expect( Hand.new("2C2S3C4C5C").send(:pair?) ).to eq(true)
+        end
+        it "isn't" do
+          expect( Hand.new("2C3C4C5C6C").send(:pair?) ).not_to eq(true)
+        end
+      end
+
+      it "has a rank of" do
         #expect(Hand.new("2C3C4C5C6C").rank_code).to eq("960000000000000000")
       end
 
@@ -181,15 +282,15 @@ describe "Poker Game" do
     context "construction" do
 
       it "with a suit and a vlaue" do
-        card = Card.new(:C, :"2")
+        card = Card.new(:C, Value.two)
         expect(card.suit).to eq(:C)
-        expect(card.value).to eq(:"2")
+        expect(card.value).to eq(Value.two)
       end
 
       it "with a card_code" do
         card = Card.from_code("3S")
         expect(card.suit).to eq(:S)
-        expect(card.value).to eq(:"3")
+        expect(card.value).to eq(Value.three)
       end
 
       it "with invalid card code" do
@@ -199,17 +300,17 @@ describe "Poker Game" do
     end
 
     it "compares equal" do
-      expect( Card.new(:H, :A) ).to eq( Card.new(:H, :A) )
+      expect( Card.new(:H, Value.ace) ).to eq( Card.new(:H, Value.ace) )
     end
 
     it "compares not equal" do
-      expect( Card.new(:H, :A) ).not_to eq( Card.new(:C, :A) )
-      expect( Card.new(:H, :A) ).not_to eq( Card.new(:H, :J) )
-      expect( Card.new(:H, :A) ).not_to eq( nil )
+      expect( Card.new(:H, Value.ace) ).not_to eq( Card.new(:C, Value.ace) )
+      expect( Card.new(:H, Value.ace) ).not_to eq( Card.new(:H, Value.jack) )
+      expect( Card.new(:H, Value.ace) ).not_to eq( nil )
     end
 
     Deck.suites.each do |suit|
-      Deck.values.each do |value|
+      Value.values.each do |value|
         it "can have values #{suit} #{value}"  do
           expect(Card.new(suit, value).value).to eq(value)
         end
@@ -217,60 +318,146 @@ describe "Poker Game" do
     end
 
     it "can not have invalid suit" do
-      expect { Card.new(:INVALID_SUIT, :"2") }.to raise_error
+      expect { Card.new(:INVALID_SUIT, Value.two) }.to raise_error
     end
 
     [:"0", :"1", 2, :invalid_value].each do |value|
       it "can not have value #{value}" do
-        expect { Card.new(:C, value) }.to raise_error
+        expect { Card.new(:C, Value.new(value)) }.to raise_error
       end
     end
 
     context "next card" do
       it "generates the next card" do
-        expect( Card.new(:C, :"2").next_card ).to eq(Card.new(:C, :"3"))
+        expect( Card.new(:C, Value.two).next_card ).to eq(Card.new(:C, Value.three))
       end
 
-      it "products jokers if there is no next card" do
-        expect( Card.new(:C, :A).next_card ).to eq(Card.joker)
+      it "producs jokers if there is no next card" do
+        expect( Card.new(:C, Value.ace).next_card ).to eq(Card.joker)
       end
     end
 
     context "sorts cards by value and" do
       it "finds first greater than second" do
-        cards = [Card.new(:C, :"3"), Card.new(:C, :"2")]
+        cards = [Card.new(:C, Value.three), Card.new(:C, Value.two)]
 
         cards = cards.sort
 
-        expect(cards[0].value).to eq(:"2")
-        expect(cards[1].value).to eq(:"3")
+        expect(cards[0].value).to eq(Value.two)
+        expect(cards[1].value).to eq(Value.three)
       end
 
       it "finds second greater than first" do
-        cards = [Card.new(:C, :"2"), Card.new(:C, :"3")]
+        cards = [Card.new(:C, Value.two), Card.new(:C, Value.three)]
 
         cards = cards.sort
 
-        expect(cards[0].value).to eq(:"2")
-        expect(cards[1].value).to eq(:"3")
+        expect(cards[0].value).to eq(Value.two)
+        expect(cards[1].value).to eq(Value.three)
       end
       
       it "finds equal values equal" do
-        cards = [Card.new(:C, :"3"), Card.new(:C, :"3")]
+        cards = [Card.new(:C, Value.three), Card.new(:C, Value.three)]
 
         cards = cards.sort
 
-        expect(cards[0].value).to eq(:"3")
-        expect(cards[1].value).to eq(:"3")
+        expect(cards[0].value).to eq(Value.three)
+        expect(cards[1].value).to eq(Value.three)
       end
 
       it "ignores suit" do
-        cards = [Card.new(:S, :"3"), Card.new(:C, :"3")]
+        cards = [Card.new(:S, Value.three), Card.new(:C, Value.three)]
 
         cards = cards.sort
 
-        expect(cards[0].value).to eq(:"3")
-        expect(cards[1].value).to eq(:"3")
+        expect(cards[0].value).to eq(Value.three)
+        expect(cards[1].value).to eq(Value.three)
+      end
+    end
+  end
+
+  context Value do
+    it "looks like a symbol" do
+      expect( Value.two.to_s ).to eq("2")
+      expect( Value.ace.to_s ).to eq("A")
+    end
+
+    context "identify" do
+
+      it "equal by value" do
+        expect( Value.ace ).to eq(Value.ace)
+      end
+
+      it "not equal" do
+        expect( Value.two ).not_to eq(Value.three)
+      end
+
+      it "mask symbol as raw identify" do
+        expect( Value.ace ).to eq(Value.ace)
+      end
+
+      it "is not equal if nil" do
+        expect( Value.two ).not_to eq(nil)
+      end
+
+      context "hash" do
+        it "equal" do
+          expect( Value.six.hash ).to eq(Value.new(:"6").hash)
+        end
+        it "not equal" do
+          expect( Value.six.hash ).not_to eq(Value.seven.hash)
+        end
+      end
+
+      context "eql?" do
+        it "eql" do
+          expect( Value.six.eql?(Value.new(:"6")) ).to eq(true)
+        end
+
+        it "not eql" do
+          expect( Value.six.eql?(Value.new(:"7")) ).not_to eq(true)
+        end
+      end
+    end
+
+    context "compare" do
+      it "greater" do
+        expect( Value.three ).to be > Value.two
+        expect( Value.jack ).to be > Value.nine
+        expect( Value.queen ).to be > Value.jack
+        expect( Value.king ).to be > Value.queen
+        expect( Value.ace ).to be > Value.king
+      end
+      it "less" do
+        expect( Value.two ).to be < Value.three
+        expect( Value.nine ).to be < Value.jack
+        expect( Value.jack ).to be < Value.queen
+        expect( Value.queen ).to be < Value.king
+        expect( Value.king ).to be < Value.ace
+      end
+    end
+
+    context "sorts by card value" do
+      it "sorts ace after king" do
+        expect( [Value.ace, Value.king ].sort ).to eq( [Value.king, Value.ace] )
+      end
+    end
+
+    context "weighs" do
+
+      it "creates a weight from a value" do
+        expect( Value.two.weight ).to eq(2)
+        expect( Value.nine.weight ).to eq(9)
+        expect( Value.jack.weight ).to eq(10)
+        expect( Value.queen.weight ).to eq(11)
+        expect( Value.king.weight ).to eq(12)
+        expect( Value.ace.weight ).to eq(13)
+      end
+
+      it "treats all other values as zero" do
+        expect( Value.new(:X) .weight).to eq(0)
+        expect( Value.new(:joker).weight ).to eq(0)
+        expect( Value.new(nil).weight ).to eq(0)
       end
     end
   end
