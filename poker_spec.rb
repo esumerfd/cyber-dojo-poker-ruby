@@ -174,6 +174,12 @@ describe "Poker Game" do
         expect { Deck.next_value(:IVNALID_VALUE) }.to raise_error
       end
     end
+
+    context "to_s" do
+      it "formats all cards" do
+        expect( Deck.new([Card.new(:H, Value.two), Card.new(:D, Value.ace)]).to_s ).to eq("2H AD")
+      end
+    end
   end
 
   context Hand do
@@ -192,139 +198,156 @@ describe "Poker Game" do
     end
 
    
-    # 0 nothing
-    # 1 high card
-    # 2 Pair
-    # 3 Two pair
-    # 4 Three of a kind
-    # 5 Straight
-    # 6 Flush
-    # 7 Full house
-    # 8 Four of a kind
-    # 9 Straight flush
     context "winning hand" do
       context "straight flush" do
         it "is" do
-          expect( Hand.new("2C3C4C5C6C").send(:straight_flush?) ).to eq(true)
+          expect( Hand.new("2C 3C 4C 5C 6C").send(:straight_flush?) ).to eq(true)
         end
         it "isn't because of number" do
-          expect( Hand.new("2C3C9C5C6C").send(:straight_flush?) ).not_to eq(true)
+          expect( Hand.new("2C 3C 9C 5C 6C").send(:straight_flush?) ).not_to eq(true)
         end
         it "isn't because of suit" do
-          expect( Hand.new("2C3C4S5C6C").send(:straight_flush?) ).not_to eq(true)
+          expect( Hand.new("2C 3C 4S 5C 6C").send(:straight_flush?) ).not_to eq(true)
         end
       end
 
       context "four of a kind" do
         it "is" do
-          expect( Hand.new("2C2S2H2D3C").send(:four_of_a_kind?) ).to eq(true)
+          expect( Hand.new("2C 2S 2H 2D 3C").send(:four_of_a_kind?) ).to eq(true)
         end
         it "isn't" do
-          expect( Hand.new("2C3S2H2D3C").send(:four_of_a_kind?) ).not_to eq(true)
+          expect( Hand.new("2C 3S 2H 2D 3C").send(:four_of_a_kind?) ).not_to eq(true)
         end
       end
 
       context "full house" do
         it "is" do
-          expect( Hand.new("2C2S2H3C3S").send(:full_house?) ).to eq(true)
+          expect( Hand.new("2C 2S 2H 3C 3S").send(:full_house?) ).to eq(true)
         end
         it "isn't because of number of values" do
-          expect( Hand.new("2C2S2H2C3S").send(:full_house?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 2H 2C 3S").send(:full_house?) ).not_to eq(true)
         end
         it "isn't because its a straight" do
-          expect( Hand.new("2C3C4C5C6C").send(:full_house?) ).not_to eq(true)
+          expect( Hand.new("2C 3C 4C 5C 6C").send(:full_house?) ).not_to eq(true)
         end
         it "isn't because its a four of a kind" do
-          expect( Hand.new("2C2S2H2S4C").send(:full_house?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 2H 2S 4C").send(:full_house?) ).not_to eq(true)
         end
       end
 
       context "flush" do
         it "is" do
-          expect( Hand.new("2C4C6C8CAC").send(:flush?) ).to eq(true)
+          expect( Hand.new("2C 4C 6C 8C AC").send(:flush?) ).to eq(true)
         end
         it "isn't because the suites are different" do
-          expect( Hand.new("2S3C4C5C6C").send(:flush?) ).not_to eq(true)
+          expect( Hand.new("2S 3C 4C 5C 6C").send(:flush?) ).not_to eq(true)
         end
         it "isn't because its a straight flush" do
-          expect( Hand.new("2C3C4C5C6C").send(:flush?) ).not_to eq(true)
+          expect( Hand.new("2C 3C 4C 5C 6C").send(:flush?) ).not_to eq(true)
         end
       end
 
       context "straight" do
         it "is low" do
-          expect( Hand.new("2C3S4H5D6C").send(:straight?) ).to eq(true)
+          expect( Hand.new("2C 3S 4H 5D 6C").send(:straight?) ).to eq(true)
         end
         it "is high" do
-          expect( Hand.new("9HJHQHKHAH").send(:straight?) ).to eq(true)
+          expect( Hand.new("9H JH QH KH AH").send(:straight?) ).to eq(true)
         end
         it "isn't" do
-          expect( Hand.new("2C3C9C5C6C").send(:straight?) ).not_to eq(true)
+          expect( Hand.new("2C 3C 9C 5C 6C").send(:straight?) ).not_to eq(true)
         end
       end
 
       context "three of a kind" do
         it "is with leading values" do
-          expect( Hand.new("2C2S2H3C4S").send(:three_of_a_kind?) ).to eq(true)
+          expect( Hand.new("2C 2S 2H 3C 4S").send(:three_of_a_kind?) ).to eq(true)
         end
         it "is with traling values" do
-          expect( Hand.new("2C3C4S4H4D").send(:three_of_a_kind?) ).to eq(true)
+          expect( Hand.new("2C 3C 4S 4H 4D").send(:three_of_a_kind?) ).to eq(true)
         end
         it "isn't with 4 of a kind" do
-          expect( Hand.new("2C2S2H2D3C").send(:three_of_a_kind?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 2H 2D 3C").send(:three_of_a_kind?) ).not_to eq(true)
         end
         it "isn't with only 2 of a kind" do
-          expect( Hand.new("2C2S9H3C4S").send(:three_of_a_kind?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 9H 3C 4S").send(:three_of_a_kind?) ).not_to eq(true)
         end
       end
 
       context "two pairs" do
         it "is with leading pairs" do
-          expect( Hand.new("2C2S3C3S4H").send(:two_pair?) ).to eq(true)
+          expect( Hand.new("2C 2S 3C 3S 4H").send(:two_pair?) ).to eq(true)
         end
         it "is split pairs" do
-          expect( Hand.new("2C2S3C4C4S").send(:two_pair?) ).to eq(true)
+          expect( Hand.new("2C 2S 3C 4C 4S").send(:two_pair?) ).to eq(true)
         end
         it "is with trailing pairs" do
-          expect( Hand.new("2C3C3S4C4S").send(:two_pair?) ).to eq(true)
+          expect( Hand.new("2C 3C 3S 4C 4S").send(:two_pair?) ).to eq(true)
         end
         it "isn't only one pair" do
-          expect( Hand.new("2C2S3C9S4H").send(:two_pair?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 3C 9S 4H").send(:two_pair?) ).not_to eq(true)
         end
         it "isn't with 4 of a kind" do
-          expect( Hand.new("2C2S2H2D3C").send(:two_pair?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 2H 2D 3C").send(:two_pair?) ).not_to eq(true)
         end
       end
 
       context "pair" do
         it "is" do
-          expect( Hand.new("2C2S3C4C5C").send(:pair?) ).to eq(true)
+          expect( Hand.new("2C 2S 3C 4C 5C").send(:pair?) ).to eq(true)
         end
         it "isn't with no pairs" do
-          expect( Hand.new("2C5S7H9DAH").send(:pair?) ).not_to eq(true)
+          expect( Hand.new("2C 5S 7H 9D AH").send(:pair?) ).not_to eq(true)
         end
         it "isn't with full house" do
-          expect( Hand.new("2C2S2H3C3S").send(:pair?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 2H 3C 3S").send(:pair?) ).not_to eq(true)
         end
         it "isn't four of a kind" do
-          expect( Hand.new("2C2S2H2D3C").send(:pair?) ).not_to eq(true)
+          expect( Hand.new("2C 2S 2H 2D 3C").send(:pair?) ).not_to eq(true)
         end
       end
 
       context "high card" do
         it "low" do
-          expect( Hand.new("2C3C4C5C6C").high_card ).to eq(Card.new(:C, Value.six))
+          expect( Hand.new("2C 3C 4C 5C 6C").high_card ).to eq(Card.new(:C, Value.six))
         end
         it "high" do
-          expect( Hand.new("AC3C4C5C6C").high_card ).to eq(Card.new(:C, Value.ace))
+          expect( Hand.new("AC 3C 4C 5C 6C").high_card ).to eq(Card.new(:C, Value.ace))
         end
         it "all the same" do
-          expect( Hand.new("9CJSQHKDAC").high_card ).to eq(Card.new(:C, Value.ace))
+          expect( Hand.new("9C JS QH KD AC").high_card ).to eq(Card.new(:C, Value.ace))
         end
       end
 
-      it "has a rank of" do
-        #expect(Hand.new("2C3C4C5C6C").rank_code).to eq("960000000000000000")
+      context "rank" do
+
+        it "straight flush" do
+          expect(Hand.new("2C 3C 4C 5C 6C").send(:rank)).to eq("96")
+        end
+        it "four of a kind" do
+          expect(Hand.new("2C 2S 2H 2D 3C").send(:rank)).to eq("83")
+        end
+        it "full house" do
+          expect(Hand.new("2C 2S 2H 3D 3C").send(:rank)).to eq("73")
+        end
+        it "flush" do
+          expect(Hand.new("2C 3C 5C 7C AC").send(:rank)).to eq("6A")
+        end
+        it "straight" do
+          expect(Hand.new("9H AH JD KD QD").send(:rank)).to eq("5A")
+        end
+        it "three of a kind" do
+          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("4A")
+        end
+        it "two pair" do
+          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("3K")
+        end
+        it "pair" do
+          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("2K")
+        end
+        it "high card" do
+          expect(Hand.new("2C 4S 5H 7D QC").send(:rank)).to eq("1Q")
+        end
       end
 
     end

@@ -207,7 +207,7 @@ class Deck
   end
 
   def to_s
-    @cards.join(",")
+    @cards.join(" ")
   end
 end
 
@@ -245,19 +245,42 @@ class Hand
 
   private
 
+  # 0 nothing
+  # 1 high card
+  # 2 Pair
+  # 3 Two pair
+  # 4 Three of a kind
+  # 5 Straight
+  # 6 Flush
+  # 7 Full house
+  # 8 Four of a kind
+  # 9 Straight flush
+  RANKERS = [
+    { name: "Straight Flush",  ranker: lambda { |hand| hand.send(:straight_flush?) } },
+    { name: "Four of a Kind",  ranker: lambda { |hand| hand.send(:four_of_a_kind?) } },
+    { name: "Full House",      ranker: lambda { |hand| hand.send(:full_house?) } },
+    { name: "Flush",           ranker: lambda { |hand| hand.send(:flush?) } },
+    { name: "Straight",        ranker: lambda { |hand| hand.send(:straight?) } },
+    { name: "Three of a Kind", ranker: lambda { |hand| hand.send(:three_of_a_kind?) } },
+    { name: "Two Pair",        ranker: lambda { |hand| hand.send(:two_pair?) } },
+    { name: "Pair",            ranker: lambda { |hand| hand.send(:pair?) } },
+    { name: "High Card",       ranker: lambda { |hand| true } },
+  ]
+
   def rank
     rank_code = ""
+    ranker_name = "unknown"
 
-    rank_code << (straight_flush? ? "11" : "00")
-    rank_code << (four_of_a_kind? ? "11" : "00")
-    rank_code << (full_house? ? "11" : "00")
-    rank_code << (flush? ? "11" : "00")
-    rank_code << (straight? ? "11" : "00")
-    rank_code << (three_of_a_kind? ? "11" : "00")
-    rank_code << (two_pair? ? "11" : "00")
-    rank_code << (pair? ? "11" : "00")
+    RANKERS.each_with_index { |ranker_data, index|
+      if ranker_data[:ranker].call(self)
+        rank_code << (RANKERS.size - index).to_s
+        rank_code << high_card.value.to_s
+        ranker_name = ranker_data[:name]
+        break
+      end
+    }
 
-    puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{rank_code}"
+    puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{self} : #{ranker_name} #{rank_code}"
 
     rank_code
   end
@@ -345,6 +368,10 @@ class Hand
     values = @cards.collect(&:value)
     values.uniq.size == 4
   end
+
+  def to_s
+    @cards.join(" ")
+  end
 end
 
 class Card
@@ -381,6 +408,7 @@ class Card
     nil != other && @suit == other.suit && @value == other.value
   end
 
+  # TODO implement in terms of value spaceship
   def <=>(other)
     delta = 0
     delta = 1 if value > other.value
