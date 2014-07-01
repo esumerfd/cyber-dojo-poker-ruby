@@ -276,13 +276,6 @@ class Hand
     rank_code
   end
 
-  def value_code
-    @cards.collect(&:value).
-      sort { |a, b| b <=> a }.
-      collect { |value| "%02d" % value.weight.to_s }.
-      join
-  end
-
   def from_code(card_codes)
     card_codes = card_codes.tr(" ,", "")
 
@@ -307,7 +300,7 @@ class Hand
     different_suites = @cards.collect(&:suit)
     
     if card_values == deck_values && different_suites.uniq.size == 1
-      rank_code = "09|#{value_code}"
+      rank_code = "09|#{sorted_code}"
     end
 
     rank_code
@@ -324,8 +317,10 @@ class Hand
     first_value = uniq_values.first
     second_value = uniq_values[1]
 
-    if values.count(first_value) == 4 || values.count(second_value) == 4
-      rank_code = "08|#{value_code}"
+    if values.count(first_value) == 4
+      rank_code = "08|#{format_code([first_value] * 4, second_value)}"
+    elsif  values.count(second_value) == 4
+      rank_code = "08|#{format_code([second_value] * 4, first_value)}"
     end
 
     rank_code
@@ -342,9 +337,10 @@ class Hand
     first_value = uniq_values.first
     second_value = uniq_values[1]
 
-    if values.count(first_value) == 3 && values.count(second_value) == 2 ||
-      values.count(first_value) == 2 && values.count(second_value) == 3
-      rank_code = "07|#{value_code}"
+    if values.count(first_value) == 3 && values.count(second_value) == 2
+      rank_code = "07|#{format_code([first_value] * 3, [second_value] * 2)}"
+    elsif values.count(first_value) == 2 && values.count(second_value) == 3
+      rank_code = "07|#{format_code([second_value] * 3, [first_value] * 2)}"
     end
 
     rank_code
@@ -358,7 +354,7 @@ class Hand
     suites = @cards.collect(&:suit)
 
     if suites.uniq.size == 1 && !straight_flush
-      rank_code = "06|#{value_code}"
+      rank_code = "06|#{sorted_code}"
     end
 
     rank_code
@@ -374,7 +370,7 @@ class Hand
     deck_values = Deck.new.select_straight_starting_at(@cards.first).collect(&:value)
 
     if card_values == deck_values
-      rank_code = "05|#{value_code}"
+      rank_code = "05|#{sorted_code}"
     end
 
     rank_code
@@ -388,14 +384,27 @@ class Hand
 
     values = @cards.collect(&:value)
 
-    uniq_values = values.uniq
-    first_value = uniq_values.first
-    second_value = uniq_values[1]
-    third_value = uniq_values[2]
+    counts = {}
+    values.inject(counts) { |count, value| 
+      count[value] = count[value] ? count[value] + 1 : 1 
+      count
+    }
 
-    if (values.count(first_value) == 3 || values.count(second_value) == 3 || values.count(third_value) == 3)
-      rank_code = "04|#{value_code}"
+    number_pairs = counts.values.find_all { |count| count == 3 }
+    if number_pairs.size == 1
+      sorted_values = counts.keys.sort { |value_a, value_b| 
+        value_a_rank = sprintf "%02d|%02d", counts[value_a], value_a.weight 
+        value_b_rank = sprintf "%02d|%02d", counts[value_b], value_b.weight
+
+        value_b_rank <=> value_a_rank
+      }
+
+      rank_code = "04|"
+      sorted_values.each { |value|
+        rank_code << format_code([value] * counts[value])
+      }
     end
+
 
     rank_code
   end
@@ -411,15 +420,25 @@ class Hand
 
     values = @cards.collect(&:value)
 
-    uniq_values = values.uniq
-    first_value = uniq_values.first
-    second_value = uniq_values[1]
-    third_value = uniq_values[2]
+    counts = {}
+    values.inject(counts) { |count, value| 
+      count[value] = count[value] ? count[value] + 1 : 1 
+      count
+    }
 
-    if values.count(first_value) == 2 && values.count(second_value) == 2 || 
-      values.count(first_value) == 2 && values.count(third_value) == 2 ||
-      values.count(second_value) == 2 && values.count(third_value) == 2
-      rank_code = "03|#{value_code}"
+    number_pairs = counts.values.find_all { |count| count == 2 }
+    if number_pairs.size == 2
+      sorted_values = counts.keys.sort { |value_a, value_b| 
+        value_a_rank = sprintf "%02d|%02d", counts[value_a], value_a.weight 
+        value_b_rank = sprintf "%02d|%02d", counts[value_b], value_b.weight
+
+        value_b_rank <=> value_a_rank
+      }
+
+      rank_code = "03|"
+      sorted_values.each { |value|
+        rank_code << format_code([value] * counts[value])
+      }
     end
 
     rank_code
@@ -434,9 +453,28 @@ class Hand
     rank_code = nil
     
     values = @cards.collect(&:value)
-    if values.uniq.size == 4
-      rank_code = "02|#{value_code}"
+
+    counts = {}
+    values.inject(counts) { |count, value| 
+      count[value] = count[value] ? count[value] + 1 : 1 
+      count
+    }
+
+    number_pairs = counts.values.find_all { |count| count == 2 }
+    if number_pairs.size == 1 && !full_house
+      sorted_values = counts.keys.sort { |value_a, value_b| 
+        value_a_rank = sprintf "%02d|%02d", counts[value_a], value_a.weight 
+        value_b_rank = sprintf "%02d|%02d", counts[value_b], value_b.weight
+
+        value_b_rank <=> value_a_rank
+      }
+
+      rank_code = "02|"
+      sorted_values.each { |value|
+        rank_code << format_code([value] * counts[value])
+      }
     end
+
 
     rank_code
   end
@@ -446,7 +484,22 @@ class Hand
   # cards have the same value, the hands are ranked by the next
   # highest, and so on.
   def high_card
-    "01|#{value_code}"
+    "01|#{sorted_code}"
+  end
+
+  def sorted_code
+    format_code( @cards.collect(&:value).sort { |a, b| b <=> a } )
+  end
+
+  def format_code(*values)
+    code = ""
+
+    values = values.flatten
+    values.collect do |value|
+      code << "%02d" % value.weight.to_s
+    end
+
+    code
   end
 
   def to_s
@@ -460,10 +513,10 @@ class Card
 
   class << self
     def from_code(card_code)
-      value_code = card_code[0]
+      sorted_code = card_code[0]
       suit_code = card_code[1]
 
-      value = value_code.to_sym
+      value = sorted_code.to_sym
       suit = suit_code.to_sym
 
       Card.new(suit, Value.from_code(value))

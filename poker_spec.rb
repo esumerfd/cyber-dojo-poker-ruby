@@ -212,7 +212,7 @@ describe "Poker Game" do
 
       context "four of a kind" do
         it "is" do
-          expect( Hand.new("2C 2S 2H 2D 3C").send(:four_of_a_kind) ).to eq("08|0302020202")
+          expect( Hand.new("2C 2S 2H 2D 3C").send(:four_of_a_kind) ).to eq("08|0202020203")
         end
         it "isn't" do
           expect( Hand.new("2C 3S 2H 2D 3C").send(:four_of_a_kind) ).to eq(nil)
@@ -220,8 +220,11 @@ describe "Poker Game" do
       end
 
       context "full house" do
-        it "is" do
-          expect( Hand.new("2C 2S 2H 3C 3S").send(:full_house) ).to eq("07|0303020202")
+        it "is with high_card" do
+          expect( Hand.new("2C 2S 2H 3C 3S").send(:full_house) ).to eq("07|0202020303")
+        end
+        it "is with low card" do
+          expect( Hand.new("JC JS JH 3C 3S").send(:full_house) ).to eq("07|1010100303")
         end
         it "isn't because of number of values" do
           expect( Hand.new("2C 2S 2H 2C 3S").send(:full_house) ).to eq(nil)
@@ -260,10 +263,13 @@ describe "Poker Game" do
 
       context "three of a kind" do
         it "is with leading values" do
-          expect( Hand.new("2C 2S 2H 3C 4S").send(:three_of_a_kind) ).to eq("04|0403020202")
+          expect( Hand.new("2C 2S 2H 3C 4S").send(:three_of_a_kind) ).to eq("04|0202020403")
         end
         it "is with traling values" do
           expect( Hand.new("2C 3C 4S 4H 4D").send(:three_of_a_kind) ).to eq("04|0404040302")
+        end
+        it "is with middle values" do
+          expect( Hand.new("2C 4S 4H 4D 3C").send(:three_of_a_kind) ).to eq("04|0404040302")
         end
         it "isn't with 4 of a kind" do
           expect( Hand.new("2C 2S 2H 2D 3C").send(:three_of_a_kind) ).to eq(nil)
@@ -275,10 +281,10 @@ describe "Poker Game" do
 
       context "two pairs" do
         it "is with leading pairs" do
-          expect( Hand.new("2C 2S 3C 3S 4H").send(:two_pair) ).to eq("03|0403030202")
+          expect( Hand.new("2C 2S 3C 3S 4H").send(:two_pair) ).to eq("03|0303020204")
         end
         it "is split pairs" do
-          expect( Hand.new("2C 2S 3C 4C 4S").send(:two_pair) ).to eq("03|0404030202")
+          expect( Hand.new("2C 2S 3C 4C 4S").send(:two_pair) ).to eq("03|0404020203")
         end
         it "is with trailing pairs" do
           expect( Hand.new("2C 3C 3S 4C 4S").send(:two_pair) ).to eq("03|0404030302")
@@ -293,7 +299,7 @@ describe "Poker Game" do
 
       context "pair" do
         it "is" do
-          expect( Hand.new("2C 2S 3C 4C 5C").send(:pair) ).to eq("02|0504030202")
+          expect( Hand.new("2C 2S 3C 4C 5C").send(:pair) ).to eq("02|0202050403")
         end
         it "isn't with no pairs" do
           expect( Hand.new("2C 5S 7H 9D AH").send(:pair) ).to eq(nil)
@@ -330,10 +336,10 @@ describe "Poker Game" do
           expect(Hand.new("2C 3C 4C 5C 6C").send(:rank)).to eq("09|0605040302")
         end
         it "four of a kind" do
-          expect(Hand.new("2C 2S 2H 2D 3C").send(:rank)).to eq("08|0302020202")
+          expect(Hand.new("2C 2S 2H 2D 3C").send(:rank)).to eq("08|0202020203")
         end
         it "full house" do
-          expect(Hand.new("2C 2S 2H 3D 3C").send(:rank)).to eq("07|0303020202")
+          expect(Hand.new("2C 2S 2H 3D 3C").send(:rank)).to eq("07|0202020303")
         end
         it "flush" do
           expect(Hand.new("2C 3C 5C 7C AC").send(:rank)).to eq("06|1307050302")
@@ -342,13 +348,13 @@ describe "Poker Game" do
           expect(Hand.new("9H AH JD KD QD").send(:rank)).to eq("05|1312111009")
         end
         it "three of a kind" do
-          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("04|1311060606")
+          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("04|0606061311")
         end
         it "two pair" do
-          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("03|1212110202")
+          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("03|1212020211")
         end
         it "pair" do
-          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("02|1208050202")
+          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("02|0202120805")
         end
         it "high card" do
           expect(Hand.new("2C 4S 5H 7D QC").send(:rank)).to eq("01|1107050402")
