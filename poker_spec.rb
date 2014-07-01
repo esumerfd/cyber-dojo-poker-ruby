@@ -67,8 +67,7 @@ describe "Poker Game" do
 
         winner, high_card = Poker.new.rank(black, white)
 
-        expect( winner ).to eq(black)
-        expect( high_card ).to eq(Card.new(:C, Value.nine))
+        expect( winner ).to eq(nil)
       end
     end
   end
