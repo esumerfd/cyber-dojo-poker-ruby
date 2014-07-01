@@ -451,6 +451,8 @@ class Hand
   # forming the pair, in decreasing order.
   def pair
     rank_code = nil
+
+    return rank_code if full_house
     
     values = @cards.collect(&:value)
 
@@ -461,7 +463,7 @@ class Hand
     }
 
     number_pairs = counts.values.find_all { |count| count == 2 }
-    if number_pairs.size == 1 && !full_house
+    if number_pairs.size == 1
       sorted_values = counts.keys.sort { |value_a, value_b| 
         value_a_rank = sprintf "%02d|%02d", counts[value_a], value_a.weight 
         value_b_rank = sprintf "%02d|%02d", counts[value_b], value_b.weight
