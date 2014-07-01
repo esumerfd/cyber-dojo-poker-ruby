@@ -235,12 +235,7 @@ class Hand
   end
 
   def <=>(other)
-    delta = 0
-
-    delta = 1 if self.send(:rank) > other.send(:rank)
-    delta = -1 if self.send(:rank) < other.send(:rank)
-
-    delta
+    self.send(:rank) <=> other.send(:rank)
   end
 
   private
@@ -415,12 +410,8 @@ class Card
     nil != other && @suit == other.suit && @value == other.value
   end
 
-  # TODO implement in terms of value spaceship
   def <=>(other)
-    delta = 0
-    delta = 1 if value > other.value
-    delta = -1 if value < other.value
-    delta
+    value <=> other.value
   end
 
   def next_card
