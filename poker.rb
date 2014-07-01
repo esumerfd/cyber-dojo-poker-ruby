@@ -130,6 +130,15 @@ class Poker
     @deck = Deck.new
   end
 
+  def play
+    player1 = deal
+    player2 = deal
+
+    puts "Player 1: #{player1}"
+    puts "Player 2: #{player2}"
+    puts "Winner: #{player1.highest(player2)}"
+  end
+
   def deal
     Hand.new(@deck.cards.sample(5))
   end
@@ -549,4 +558,6 @@ class Card
   end
 end
 
-
+if ARGV.size == 1 && ARGV[0] == "-play"
+  Poker.new.play
+end
