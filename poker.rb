@@ -296,7 +296,9 @@ class Hand
     rank_code = nil
 
     card_values = @cards.collect(&:value).sort
-    deck_values = Deck.new.select_straight_starting_at(@cards.first).collect(&:value)
+
+    lowest_card = @cards.min_by { |card| card.value.weight }
+    deck_values = Deck.new.select_straight_starting_at(lowest_card).collect(&:value)
 
     different_suites = @cards.collect(&:suit)
     
@@ -368,7 +370,9 @@ class Hand
     rank_code = nil
 
     card_values = @cards.collect(&:value).sort
-    deck_values = Deck.new.select_straight_starting_at(@cards.first).collect(&:value)
+
+    lowest_card = @cards.min_by { |card| card.value.weight }
+    deck_values = Deck.new.select_straight_starting_at(lowest_card).collect(&:value)
 
     if card_values == deck_values
       rank_code = "05|#{sorted_code}"

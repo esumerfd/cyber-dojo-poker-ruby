@@ -197,8 +197,11 @@ describe "Poker Game" do
    
     context "winning hand" do
       context "straight flush" do
-        it "is" do
+        it "is already in sequence" do
           expect( Hand.new("2C 3C 4C 5C 6C").send(:straight_flush) ).to eq("09|0605040302")
+        end
+        it "is out of sequence" do
+          expect( Hand.new("4C 3C 2C 5C 6C").send(:straight_flush) ).to eq("09|0605040302")
         end
         it "isn't because of number" do
           expect( Hand.new("2C 3C 9C 5C 6C").send(:straight_flush) ).to eq(nil)
@@ -253,6 +256,9 @@ describe "Poker Game" do
         end
         it "is high" do
           expect( Hand.new("9H JH QH KH AH").send(:straight) ).to eq("05|1312111009")
+        end
+        it "is out of sequence" do
+          expect( Hand.new("KH JH QH 9H AH").send(:straight) ).to eq("05|1312111009")
         end
         it "isn't" do
           expect( Hand.new("2C 3C 9C 5C 6C").send(:straight) ).to eq(nil)
