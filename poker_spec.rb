@@ -61,7 +61,7 @@ describe "Poker Game" do
 
       # Input: Black: 2H 3D 5S 9C KD White: 2D 3H 5C 9S KH
       # Output: Tie
-      it "three" do
+      it "four" do
         black = Hand.new("2H 3D 5S 9C KD")
         white = Hand.new("2D 3H 5C 9S KH")
 
@@ -322,31 +322,31 @@ describe "Poker Game" do
       context "rank" do
 
         it "straight flush" do
-          expect(Hand.new("2C 3C 4C 5C 6C").send(:rank)).to eq("96")
+          expect(Hand.new("2C 3C 4C 5C 6C").send(:rank)).to eq("09|0605040302")
         end
         it "four of a kind" do
-          expect(Hand.new("2C 2S 2H 2D 3C").send(:rank)).to eq("83")
+          expect(Hand.new("2C 2S 2H 2D 3C").send(:rank)).to eq("08|0302020202")
         end
         it "full house" do
-          expect(Hand.new("2C 2S 2H 3D 3C").send(:rank)).to eq("73")
+          expect(Hand.new("2C 2S 2H 3D 3C").send(:rank)).to eq("07|0303020202")
         end
         it "flush" do
-          expect(Hand.new("2C 3C 5C 7C AC").send(:rank)).to eq("6A")
+          expect(Hand.new("2C 3C 5C 7C AC").send(:rank)).to eq("06|1307050302")
         end
         it "straight" do
-          expect(Hand.new("9H AH JD KD QD").send(:rank)).to eq("5A")
+          expect(Hand.new("9H AH JD KD QD").send(:rank)).to eq("05|1312111009")
         end
         it "three of a kind" do
-          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("4A")
+          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("04|1311060606")
         end
         it "two pair" do
-          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("3K")
+          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("03|1212110202")
         end
         it "pair" do
-          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("2K")
+          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("02|1208050202")
         end
         it "high card" do
-          expect(Hand.new("2C 4S 5H 7D QC").send(:rank)).to eq("1Q")
+          expect(Hand.new("2C 4S 5H 7D QC").send(:rank)).to eq("01|1107050402")
         end
       end
 

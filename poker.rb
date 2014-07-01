@@ -269,20 +269,27 @@ class Hand
 
   def rank
     rank_code = ""
-    ranker_name = "unknown"
 
     RANKERS.each_with_index { |ranker_data, index|
       if ranker_data[:ranker].call(self)
-        rank_code << (RANKERS.size - index).to_s
-        rank_code << high_card.value.to_s
-        ranker_name = ranker_data[:name]
+        rank_code << "%02d" % (RANKERS.size - index).to_s
+        rank_code << "|"
+        rank_code << value_code
+
+        puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{self} : #{rank_code} : #{ranker_data[:name]} #{high_card.value}"
+
         break
       end
     }
 
-    puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{self} : #{ranker_name} #{rank_code}"
-
     rank_code
+  end
+
+  def value_code
+    @cards.collect(&:value).
+      sort { |a, b| b <=> a }.
+      collect { |value| "%02d" % value.weight.to_s }.
+      join
   end
 
   def from_code(card_codes)
