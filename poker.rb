@@ -136,7 +136,7 @@ class Poker
 
   def rank(black, white)
     winner = black.highest(white)
-    return winner, winner.high_card if winner
+    return winner, winner.high_card_name if winner
   end
 end
 
@@ -230,7 +230,7 @@ class Hand
     highest
   end
 
-  def high_card
+  def high_card_name
     @cards.max { |a,b| a.value <=> b.value }
   end
 
@@ -251,30 +251,26 @@ class Hand
   # 8 Four of a kind
   # 9 Straight flush
   RANKERS = [
-    { name: "Straight Flush",  ranker: lambda { |hand| hand.send(:straight_flush?) } },
-    { name: "Four of a Kind",  ranker: lambda { |hand| hand.send(:four_of_a_kind?) } },
-    { name: "Full House",      ranker: lambda { |hand| hand.send(:full_house?) } },
-    { name: "Flush",           ranker: lambda { |hand| hand.send(:flush?) } },
-    { name: "Straight",        ranker: lambda { |hand| hand.send(:straight?) } },
-    { name: "Three of a Kind", ranker: lambda { |hand| hand.send(:three_of_a_kind?) } },
-    { name: "Two Pair",        ranker: lambda { |hand| hand.send(:two_pair?) } },
-    { name: "Pair",            ranker: lambda { |hand| hand.send(:pair?) } },
-    { name: "High Card",       ranker: lambda { |hand| true } },
+    { name: "Straight Flush",  ranker: lambda { |hand| hand.send(:straight_flush) } },
+    { name: "Four of a Kind",  ranker: lambda { |hand| hand.send(:four_of_a_kind) } },
+    { name: "Full House",      ranker: lambda { |hand| hand.send(:full_house) } },
+    { name: "Flush",           ranker: lambda { |hand| hand.send(:flush) } },
+    { name: "Straight",        ranker: lambda { |hand| hand.send(:straight) } },
+    { name: "Three of a Kind", ranker: lambda { |hand| hand.send(:three_of_a_kind) } },
+    { name: "Two Pair",        ranker: lambda { |hand| hand.send(:two_pair) } },
+    { name: "Pair",            ranker: lambda { |hand| hand.send(:pair) } },
+    { name: "High Card",       ranker: lambda { |hand| hand.send(:high_card) } },
   ]
 
   def rank
     rank_code = ""
 
     RANKERS.each_with_index { |ranker_data, index|
-      if ranker_data[:ranker].call(self)
-        rank_code << "%02d" % (RANKERS.size - index).to_s
-        rank_code << "|"
-        rank_code << value_code
+      rank_code = ranker_data[:ranker].call(self)
 
-        puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{self} : #{rank_code} : #{ranker_data[:name]} #{high_card.value}"
-
-        break
-      end
+      puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{self} : #{rank_code} : #{ranker_data[:name]}"
+      
+      break if rank_code
     }
 
     rank_code
@@ -300,49 +296,96 @@ class Hand
     cards
   end
 
-  def straight_flush?
+  # Straight flush: 5 cards of the same suit with consecutive
+  # values. Ranked by the highest card in the hand.
+  def straight_flush
+    rank_code = nil
+
     card_values = @cards.collect(&:value).sort
     deck_values = Deck.new.select_straight_starting_at(@cards.first).collect(&:value)
 
     different_suites = @cards.collect(&:suit)
     
-    card_values == deck_values && different_suites.uniq.size == 1
+    if card_values == deck_values && different_suites.uniq.size == 1
+      rank_code = "09|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def four_of_a_kind?
+  # Four of a kind: 4 cards with the same value. Ranked by the
+  # value of the 4 cards.
+  def four_of_a_kind
+    rank_code = nil
+
     values = @cards.collect(&:value)
 
     uniq_values = values.uniq
     first_value = uniq_values.first
     second_value = uniq_values[1]
 
-    values.count(first_value) == 4 || values.count(second_value) == 4
+    if values.count(first_value) == 4 || values.count(second_value) == 4
+      rank_code = "08|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def full_house?
+  # Full House: 3 cards of the same value, with the remaining 2
+  # cards forming a pair. Ranked by the value of the 3 cards.
+  def full_house
+    rank_code = nil
+
     values = @cards.collect(&:value)
 
     uniq_values = values.uniq
     first_value = uniq_values.first
     second_value = uniq_values[1]
 
-    values.count(first_value) == 3 && values.count(second_value) == 2 ||
-    values.count(first_value) == 2 && values.count(second_value) == 3
+    if values.count(first_value) == 3 && values.count(second_value) == 2 ||
+      values.count(first_value) == 2 && values.count(second_value) == 3
+      rank_code = "07|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def flush?
+  # Flush: Hand contains 5 cards of the same suit. Hands which 
+  # are both flushes are ranked using the rules for High Card.
+  def flush
+    rank_code = nil
+
     suites = @cards.collect(&:suit)
-    suites.uniq.size == 1 && !straight_flush?
+
+    if suites.uniq.size == 1 && !straight_flush
+      rank_code = "06|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def straight?
+  # Straight: Hand contains 5 cards with consecutive values. 
+  # Hands which both contain a straight are ranked by their 
+  # highest card.
+  def straight
+    rank_code = nil
+
     card_values = @cards.collect(&:value).sort
     deck_values = Deck.new.select_straight_starting_at(@cards.first).collect(&:value)
 
-    card_values == deck_values
+    if card_values == deck_values
+      rank_code = "05|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def three_of_a_kind?
+  # Three of a Kind: Three of the cards in the hand have the 
+  # same value. Hands which both contain three of a kind are 
+  # ranked by the value of the 3 cards.
+  def three_of_a_kind
+    rank_code = nil
+
     values = @cards.collect(&:value)
 
     uniq_values = values.uniq
@@ -350,10 +393,22 @@ class Hand
     second_value = uniq_values[1]
     third_value = uniq_values[2]
 
-    (values.count(first_value) == 3 || values.count(second_value) == 3 || values.count(third_value) == 3)
+    if (values.count(first_value) == 3 || values.count(second_value) == 3 || values.count(third_value) == 3)
+      rank_code = "04|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def two_pair?
+  # Two Pairs: The hand contains 2 different pairs. Hands 
+  # which both contain 2 pairs are ranked by the value of 
+  # their highest pair. Hands with the same highest pair 
+  # are ranked by the value of their other pair. If these 
+  # values are the same the hands are ranked by the value 
+  # of the remaining card.
+  def two_pair
+    rank_code = nil
+
     values = @cards.collect(&:value)
 
     uniq_values = values.uniq
@@ -361,14 +416,37 @@ class Hand
     second_value = uniq_values[1]
     third_value = uniq_values[2]
 
-    values.count(first_value) == 2 && values.count(second_value) == 2 || 
-    values.count(first_value) == 2 && values.count(third_value) == 2 ||
-    values.count(second_value) == 2 && values.count(third_value) == 2
+    if values.count(first_value) == 2 && values.count(second_value) == 2 || 
+      values.count(first_value) == 2 && values.count(third_value) == 2 ||
+      values.count(second_value) == 2 && values.count(third_value) == 2
+      rank_code = "03|#{value_code}"
+    end
+
+    rank_code
   end
 
-  def pair?
+  # Pair: 2 of the 5 cards in the hand have the same value. 
+  # Hands which both contain a pair are ranked by the value of
+  # the cards forming the pair. If these values are the same, 
+  # the hands are ranked by the values of the cards not 
+  # forming the pair, in decreasing order.
+  def pair
+    rank_code = nil
+    
     values = @cards.collect(&:value)
-    values.uniq.size == 4
+    if values.uniq.size == 4
+      rank_code = "02|#{value_code}"
+    end
+
+    rank_code
+  end
+
+  # High Card: Hands which do not fit any higher category are
+  # ranked by the value of their highest card. If the highest
+  # cards have the same value, the hands are ranked by the next
+  # highest, and so on.
+  def high_card
+    "01|#{value_code}"
   end
 
   def to_s
