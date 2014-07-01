@@ -135,8 +135,7 @@ class Poker
   end
 
   def rank(black, white)
-    winner = black.highest(white)
-    return winner, winner.high_card_name if winner
+    black.highest(white)
   end
 end
 
@@ -230,10 +229,6 @@ class Hand
     highest
   end
 
-  def high_card_name
-    @cards.max { |a,b| a.value <=> b.value }
-  end
-
   def <=>(other)
     self.send(:rank) <=> other.send(:rank)
   end
@@ -267,9 +262,6 @@ class Hand
 
     RANKERS.each_with_index { |ranker_data, index|
       rank_code = ranker_data[:ranker].call(self)
-
-      puts ">>>> #{File.basename(__FILE__)}:#{__LINE__}, #{self} : #{rank_code} : #{ranker_data[:name]}"
-      
       break if rank_code
     }
 

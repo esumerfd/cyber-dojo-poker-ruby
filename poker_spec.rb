@@ -30,10 +30,9 @@ describe "Poker Game" do
         black = Hand.new("2H 3D 5S 9C KD")
         white = Hand.new("2C 3H 4S 8C AH")
 
-        winner, high_card = Poker.new.rank(black, white)
+        winner = Poker.new.rank(black, white)
 
         expect( winner ).to eq(white)
-        expect( high_card ).to eq(Card.new(:H, Value.ace))
       end
 
       # Input: Black: 2H 4S 4C 2D 4H White: 2S 8S AS QS 3S
@@ -42,7 +41,7 @@ describe "Poker Game" do
         black = Hand.new("2H 4S 4C 2D 4H")
         white = Hand.new("2S 8S AS QS 3S")
 
-        winner, high_card = Poker.new.rank(black, white)
+        winner = Poker.new.rank(black, white)
 
         expect( winner ).to eq(black)
       end
@@ -53,10 +52,9 @@ describe "Poker Game" do
         black = Hand.new("2H 3D 5S 9C KD")
         white = Hand.new("2C 3H 4S 8C KH")
 
-        winner, high_card = Poker.new.rank(black, white)
+        winner = Poker.new.rank(black, white)
 
         expect( winner ).to eq(black)
-        expect( high_card ).to eq(Card.new(:C, Value.nine))
       end
 
       # Input: Black: 2H 3D 5S 9C KD White: 2D 3H 5C 9S KH
@@ -65,7 +63,7 @@ describe "Poker Game" do
         black = Hand.new("2H 3D 5S 9C KD")
         white = Hand.new("2D 3H 5C 9S KH")
 
-        winner, high_card = Poker.new.rank(black, white)
+        winner = Poker.new.rank(black, white)
 
         expect( winner ).to eq(nil)
       end
@@ -307,6 +305,9 @@ describe "Poker Game" do
         it "isn't with full house" do
           expect( Hand.new("2C 2S 2H 3C 3S").send(:pair) ).to eq(nil)
         end
+        it "isn't three of a kind" do
+          expect( Hand.new("2C 2S 2H 4D 3C").send(:pair) ).to eq(nil)
+        end
         it "isn't four of a kind" do
           expect( Hand.new("2C 2S 2H 2D 3C").send(:pair) ).to eq(nil)
         end
@@ -316,18 +317,7 @@ describe "Poker Game" do
         it "is" do
           expect( Hand.new("2C 4S 6H 7D 8H").send(:high_card) ).to eq("01|0807060402")
         end
-      end
-
-      context "high card name" do
-        it "low" do
-          expect( Hand.new("2C 3C 4C 5C 6C").high_card_name ).to eq(Card.new(:C, Value.six))
-        end
-        it "high" do
-          expect( Hand.new("AC 3C 4C 5C 6C").high_card_name ).to eq(Card.new(:C, Value.ace))
-        end
-        it "all the same" do
-          expect( Hand.new("9C JS QH KD AC").high_card_name ).to eq(Card.new(:C, Value.ace))
-        end
+        # TODO need exclusion cases.
       end
 
       context "rank" do
