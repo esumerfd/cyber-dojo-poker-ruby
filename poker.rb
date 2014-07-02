@@ -124,6 +124,16 @@ class Value
 end
 
 class Poker
+  @@debug = false
+  class << self
+    def debug
+      @@debug = true
+    end
+    def debug?
+      @@debug
+    end
+  end
+
   attr_accessor :deck
 
   def initialize
@@ -131,13 +141,17 @@ class Poker
   end
 
   def play
-    player1 = deal
-    player2 = deal
+    player1, player2 = deal_two_hands
 
     winner = player1.highest(player2)
 
     puts "Player 1: #{player1} #{winner == player1 ? 'WINNER' : ''}"
     puts "Player 2: #{player2} #{winner == player2 ? 'WINNER' : ''}"
+  end
+
+  def deal_two_hands
+    cards = @deck.cards.sample(10)
+    return Hand.new(cards[0..4]), Hand.new(cards[5..9])
   end
 
   def deal
@@ -274,6 +288,8 @@ class Hand
       rank_code = ranker_data[:ranker].call(self)
       break if rank_code
     }
+
+    puts "DEBUG cards #{self} : rank #{rank_code}" if Poker.debug?
 
     rank_code
   end
@@ -549,6 +565,11 @@ class Card
   end
 end
 
-if ARGV.size == 1 && ARGV[0] == "-play"
-  Poker.new.play
+play_now = false
+ARGV.each do |arg|
+  Poker.debug if arg == "-debug"
+  play_now = true if arg == "-play"
 end
+
+Poker.new.play if play_now
+

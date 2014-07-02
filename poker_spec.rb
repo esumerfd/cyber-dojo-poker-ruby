@@ -67,6 +67,17 @@ describe "Poker Game" do
 
         expect( winner ).to eq(nil)
       end
+
+      # Player 1: 4S 2D 9S 4H 7H WINNER
+      # Player 2: QS AS 6S 7S 3C
+      it "five" do
+        black = Hand.new("4S 2D 9S 4H 7H")
+        white = Hand.new("QS AS 6S 7S 3C")
+
+        winner = Poker.new.rank(black, white)
+
+        expect( winner ).to eq(black)
+      end
     end
   end
 
