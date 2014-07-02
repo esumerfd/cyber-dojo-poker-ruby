@@ -134,9 +134,10 @@ class Poker
     player1 = deal
     player2 = deal
 
-    puts "Player 1: #{player1}"
-    puts "Player 2: #{player2}"
-    puts "Winner: #{player1.highest(player2)}"
+    winner = player1.highest(player2)
+
+    puts "Player 1: #{player1} #{winner == player1 ? 'WINNER' : ''}"
+    puts "Player 2: #{player2} #{winner == player2 ? 'WINNER' : ''}"
   end
 
   def deal
