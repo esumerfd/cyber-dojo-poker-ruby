@@ -71,8 +71,8 @@ describe "Poker Game" do
   end
 
   context Deck do
-    it "has suites" do
-      expect(Deck.suites).to eq([:C, :D, :H, :S])
+    it "has suits" do
+      expect(Deck.suits).to eq([:C, :D, :H, :S])
     end
 
     it "has a full deck" do
@@ -93,7 +93,7 @@ describe "Poker Game" do
       expect(Deck.new([Card.new(:C, Value.queen)])).not_to be_full
     end
 
-    Deck.suites.each do |suit|
+    Deck.suits.each do |suit|
       Value.values.each do |value|
         it "has card #{suit} #{value}" do
           expect(Deck.new.card?(suit, value)).to eq(true)
@@ -242,7 +242,7 @@ describe "Poker Game" do
         it "is" do
           expect( Hand.new("2C 4C 6C 8C AC").send(:flush) ).to eq("06|1308060402")
         end
-        it "isn't because the suites are different" do
+        it "isn't because the suits are different" do
           expect( Hand.new("2S 3C 4C 5C 6C").send(:flush) ).to eq(nil)
         end
         it "isn't because its a straight flush" do
@@ -392,7 +392,7 @@ describe "Poker Game" do
       expect( Card.new(:H, Value.ace) ).not_to eq( nil )
     end
 
-    Deck.suites.each do |suit|
+    Deck.suits.each do |suit|
       Value.values.each do |value|
         it "can have values #{suit} #{value}"  do
           expect(Card.new(suit, value).value).to eq(value)

@@ -150,16 +150,16 @@ class Poker
 end
 
 class Deck
-  @@suites = [:C, :D, :H, :S]
+  @@suits = [:C, :D, :H, :S]
 
   class << self
-    def suites
-      @@suites
+    def suits
+      @@suits
     end
 
     def create_cards
       cards = []
-      @@suites.each do |suit|
+      @@suits.each do |suit|
         Value.values.each do |value|
           cards << Card.new(suit, value)
         end
@@ -168,7 +168,7 @@ class Deck
     end
 
     def valid_suit(suit)
-      @@suites.include?(suit) || suit == :joker
+      @@suits.include?(suit) || suit == :joker
     end
 
     def valid_value(value)
@@ -189,7 +189,7 @@ class Deck
   def full?
     return false unless @cards.size == 48
 
-    missing_card = @@suites.find do |suit|
+    missing_card = @@suits.find do |suit|
       Value.values.find do |value|
         false == card?(suit, value)
       end
@@ -301,9 +301,9 @@ class Hand
     lowest_card = @cards.min_by { |card| card.value.weight }
     deck_values = Deck.new.select_straight_starting_at(lowest_card).collect(&:value)
 
-    uniq_suites = @cards.collect(&:suit).uniq
+    uniq_suits = @cards.collect(&:suit).uniq
     
-    if card_values == deck_values && uniq_suites.size == 1
+    if card_values == deck_values && uniq_suits.size == 1
       rank_code = "09|"
       rank_code << code_ordered_values
     end
@@ -356,9 +356,9 @@ class Hand
   def flush
     rank_code = nil
 
-    suites = @cards.collect(&:suit)
+    suits = @cards.collect(&:suit)
 
-    if suites.uniq.size == 1 && !straight_flush
+    if suits.uniq.size == 1 && !straight_flush
       rank_code = "06|"
       rank_code << code_ordered_values
     end
