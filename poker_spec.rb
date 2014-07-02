@@ -137,10 +137,10 @@ describe "Poker Game" do
         )
       end
 
-      it "selects straight from 9" do
-        expect( Deck.new.select_straight_starting_at("9H") ).to eq(
+      it "selects straight from T" do
+        expect( Deck.new.select_straight_starting_at("TH") ).to eq(
           [
-            Card.new(:H, Value.nine),
+            Card.new(:H, Value.ten),
             Card.new(:H, Value.jack),
             Card.new(:H, Value.queen),
             Card.new(:H, Value.king),
@@ -166,7 +166,7 @@ describe "Poker Game" do
 
       it "plus one" do
         expect( Deck.next_value(Value.two) ).to eq(Value.three)
-        expect( Deck.next_value(Value.nine) ).to eq(Value.jack)
+        expect( Deck.next_value(Value.nine) ).to eq(Value.ten)
         expect( Deck.next_value(Value.king) ).to eq(Value.ace)
       end
 
@@ -236,7 +236,7 @@ describe "Poker Game" do
           expect( Hand.new("2C 2S 2H 3C 3S").send(:full_house) ).to eq("07|0202020303")
         end
         it "is with low card" do
-          expect( Hand.new("JC JS JH 3C 3S").send(:full_house) ).to eq("07|1010100303")
+          expect( Hand.new("JC JS JH 3C 3S").send(:full_house) ).to eq("07|1111110303")
         end
         it "isn't because of number of values" do
           expect( Hand.new("2C 2S 2H 2C 3S").send(:full_house) ).to eq(nil)
@@ -251,7 +251,7 @@ describe "Poker Game" do
 
       context "flush" do
         it "is" do
-          expect( Hand.new("2C 4C 6C 8C AC").send(:flush) ).to eq("06|1308060402")
+          expect( Hand.new("2C 4C 6C 8C AC").send(:flush) ).to eq("06|1408060402")
         end
         it "isn't because the suits are different" do
           expect( Hand.new("2S 3C 4C 5C 6C").send(:flush) ).to eq(nil)
@@ -266,10 +266,10 @@ describe "Poker Game" do
           expect( Hand.new("2C 3S 4H 5D 6C").send(:straight) ).to eq("05|0605040302")
         end
         it "is high" do
-          expect( Hand.new("9H JH QH KH AH").send(:straight) ).to eq("05|1312111009")
+          expect( Hand.new("TH JH QH KH AH").send(:straight) ).to eq("05|1413121110")
         end
         it "is out of sequence" do
-          expect( Hand.new("KH JH QH 9H AH").send(:straight) ).to eq("05|1312111009")
+          expect( Hand.new("KH JH QH TH AH").send(:straight) ).to eq("05|1413121110")
         end
         it "isn't" do
           expect( Hand.new("2C 3C 9C 5C 6C").send(:straight) ).to eq(nil)
@@ -349,22 +349,22 @@ describe "Poker Game" do
           expect(Hand.new("2C 2S 2H 3D 3C").send(:rank)).to eq("07|0202020303")
         end
         it "flush" do
-          expect(Hand.new("2C 3C 5C 7C AC").send(:rank)).to eq("06|1307050302")
+          expect(Hand.new("2C 3C 5C 7C AC").send(:rank)).to eq("06|1407050302")
         end
         it "straight" do
-          expect(Hand.new("9H AH JD KD QD").send(:rank)).to eq("05|1312111009")
+          expect(Hand.new("TH AH JD KD QD").send(:rank)).to eq("05|1413121110")
         end
         it "three of a kind" do
-          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("04|0606061311")
+          expect(Hand.new("6D 6S AH 6H QC").send(:rank)).to eq("04|0606061412")
         end
         it "two pair" do
-          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("03|1212020211")
+          expect(Hand.new("2C 2S KD KH QD").send(:rank)).to eq("03|1313020212")
         end
         it "pair" do
-          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("02|0202120805")
+          expect(Hand.new("2C 2S 5H 8S KH").send(:rank)).to eq("02|0202130805")
         end
         it "high card" do
-          expect(Hand.new("2C 4S 5H 7D QC").send(:rank)).to eq("01|1107050402")
+          expect(Hand.new("2C 4S 5H 7D QC").send(:rank)).to eq("01|1207050402")
         end
       end
 
@@ -542,10 +542,11 @@ describe "Poker Game" do
       it "creates a weight from a value" do
         expect( Value.two.weight ).to eq(2)
         expect( Value.nine.weight ).to eq(9)
-        expect( Value.jack.weight ).to eq(10)
-        expect( Value.queen.weight ).to eq(11)
-        expect( Value.king.weight ).to eq(12)
-        expect( Value.ace.weight ).to eq(13)
+        expect( Value.ten.weight ).to eq(10)
+        expect( Value.jack.weight ).to eq(11)
+        expect( Value.queen.weight ).to eq(12)
+        expect( Value.king.weight ).to eq(13)
+        expect( Value.ace.weight ).to eq(14)
       end
 
       it "treats all other values as zero" do

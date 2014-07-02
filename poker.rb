@@ -69,6 +69,9 @@ class Value
     def nine 
       Value.new(:"9")
     end
+    def ten
+      Value.new(:"T")
+    end
     def jack 
       Value.new(:J)
     end
@@ -94,6 +97,7 @@ class Value
         Value.seven,
         Value.eight,
         Value.nine,
+        Value.ten,
         Value.jack,
         Value.queen,
         Value.king,
@@ -201,7 +205,7 @@ class Deck
   end
 
   def full?
-    return false unless @cards.size == 48
+    return false unless @cards.size == 52
 
     missing_card = @@suits.find do |suit|
       Value.values.find do |value|
@@ -298,7 +302,7 @@ class Hand
     card_codes = card_codes.tr(" ,", "")
 
     cards = []
-    card_codes.scan(/[23456789JQKA][CHSD]/).each do |card_code|
+    card_codes.scan(/[23456789TJQKA][CHSD]/).each do |card_code|
       cards << Card.from_code(card_code)
     end
 
